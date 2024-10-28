@@ -6,8 +6,12 @@ import os
 import sys
 import textwrap
 
-from plaid import Client
-from plaid import errors as plaid_errors
+from plaid2text.api import new_plaid_api_client
+
+import plaid
+from plaid.exceptions import ApiException
+from plaid.model.transactions_get_request_options import TransactionsGetRequestOptions
+from plaid.model.transactions_get_request import TransactionsGetRequest
 
 import plaid2text.config_manager as cm
 from plaid2text.interact import prompt, clear_screen, NullValidator
@@ -22,7 +26,7 @@ class PlaidAccess():
         else:
             self.client_id, self.secret = cm.get_plaid_config()
 
-        self.client = Client(self.client_id, self.secret, "development", suppress_warnings=True)
+        self.client = new_plaid_api_client(self.client_id, self.secret)
 
     def get_transactions(self,
                          access_token,
@@ -44,13 +48,17 @@ class PlaidAccess():
                 print("Fetching page 1")
 
             try:
-                response = self.client.Transactions.get(
-                                access_token,
-                                start_date.strftime("%Y-%m-%d"),
-                                end_date.strftime("%Y-%m-%d"),
-                                account_ids=account_array,
-                                offset=len(ret))
-            except plaid_errors.ItemError as ex:
+                options = TransactionsGetRequestOptions()
+                options.offset = len(ret)
+                options.account_ids=account_array
+                request = TransactionsGetRequest(
+                    access_token=access_token,
+                    start_date=start_date.date(),
+                    end_date=end_date.date(),
+                    options=options,
+                )
+                response = self.client.transactions_get(request)
+            except ApiException as ex:
                 print("Unable to update plaid account [%s] due to: " % account_ids, file=sys.stderr)
                 print("    %s" % ex, file=sys.stderr )
                 sys.exit(1)

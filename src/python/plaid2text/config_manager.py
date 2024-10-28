@@ -4,10 +4,20 @@ from collections import OrderedDict
 import configparser
 import os
 import sys
+from pathlib import Path
 
+from plaid2text.api import new_plaid_api_client
 from plaid2text.interact import prompt, NullValidator, YesNoValidator
-from plaid import Client
-from plaid import errors as plaid_errors
+from plaid2text.link_http_server import run_link_http_server
+
+import plaid
+from plaid.exceptions import ApiException
+from plaid.model.country_code import CountryCode
+from plaid.model.accounts_get_request import AccountsGetRequest
+from plaid.model.link_token_create_request import LinkTokenCreateRequest
+from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
+from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+from plaid.model.products import Products
 
 import json
 
@@ -231,32 +241,40 @@ def create_account(account):
         # plaid['secret'] = secret
         
         configs = {
-            'user': {
-                'client_user_id': '123-test-user-id',
-            },
-            'products': ['transactions'],
+            'user': LinkTokenCreateRequestUser(
+                client_user_id='123-test-user-id',
+            ),
+            'products': [Products('transactions')],
             'client_name': "Plaid Test App",
-            'country_codes': ['US'],
+            'country_codes': [CountryCode('US')],
             'language': 'en',
         }
 
         # create link token
-        client = Client(client_id, secret, "development", suppress_warnings=True)
-        response = client.LinkToken.create(configs)
+        client = new_plaid_api_client(client_id, secret)
+        link_token_create_request = LinkTokenCreateRequest(**configs)
+        response = client.link_token_create(link_token_create_request)
         link_token = response['link_token']
 
         generate_auth_page(link_token)
-        print("\n\nPlease open " + FILE_DEFAULTS.auth_file + " to authenticate your account with Plaid")
-        public_token = prompt('Enter your public_token from the auth page: ', validator=NullValidator())
+
+        with run_link_http_server(serve_directory = Path(FILE_DEFAULTS.auth_file).parent.absolute()):
+            print("\n\nPlease open " + FILE_DEFAULTS.auth_file + " to authenticate your account with Plaid")
+            public_token = prompt('Enter your public_token from the auth page: ', validator=NullValidator())
         # plaid['public_token'] = public_token
 
-        response = client.Item.public_token.exchange(public_token)
+        item_public_token_exchange_request = ItemPublicTokenExchangeRequest(
+            public_token=public_token,
+        )
+        response = client.item_public_token_exchange(item_public_token_exchange_request)
         access_token = response['access_token']
         plaid['access_token'] = access_token
         item_id = response['item_id']
         plaid['item_id'] = item_id
 
-        response = client.Accounts.get(access_token)
+
+        accounts_get_request = AccountsGetRequest(access_token=access_token)
+        response = client.accounts_get(accounts_get_request)
 
         accounts = response['accounts']
 
@@ -267,7 +285,7 @@ def create_account(account):
         account_id = prompt('\nEnter account_id of desired account: ', validator=NullValidator())
         plaid['account'] = account_id
 
-    except plaid_errors.ItemError as ex:
+    except ApiException as ex:
         print("    %s" % ex, file=sys.stderr )
         sys.exit(1)
     else:

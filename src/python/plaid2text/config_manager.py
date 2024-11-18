@@ -245,7 +245,7 @@ def create_account(account):
                 client_user_id='123-test-user-id',
             ),
             'products': [Products('transactions')],
-            'client_name': "Plaid Test App",
+            'client_name': "plaid2text",
             'country_codes': [CountryCode('US')],
             'language': 'en',
         }

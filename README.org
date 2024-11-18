@@ -110,6 +110,10 @@ configuration file and save your keys into it. You can do this by simply
 invoking plaid2text without arguments. =plaid2text= will prompt you for your
 keys and store them in your config file.
 
+You may also have to specify a use case in the the Dashboard Link Customization 
+page (https://dashboard.plaid.com/link/data-transparency-v5) or the API may throw
+an INTERNAL_SERVER_ERROR.
+
 A note about Plaid. Plaid is a paid service, but developers have access to the
 developer API without paying. The developer API has all the features of the
 production API. I have been using this for a few months now on my 6 accounts and

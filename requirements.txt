@@ -16,7 +16,7 @@ importlib-metadata==1.7.0
 lxml==4.5.1
 more-itertools==8.4.0
 packaging==20.4
-plaid-python==8.0.0
+plaid-python==28.0.0
 pluggy==0.13.1
 ply==3.11
 prompt-toolkit==3.0.5

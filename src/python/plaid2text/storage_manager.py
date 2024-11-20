@@ -122,6 +122,7 @@ class SQLiteStorage():
         Occurs when using the --download-transactions option.
         """
         for t in transactions:
+            t = t.to_dict()
             trans_id = t['transaction_id']
             act_id   = t['account_id'] 
 
@@ -138,7 +139,7 @@ class SQLiteStorage():
                         set updated = strftime('%Y-%m-%dT%H:%M:%SZ', 'now'),
                             plaid_json = excluded.plaid_json,
                             metadata   = excluded.metadata
-                """, [act_id, trans_id, json.dumps(t), metadata])
+                """, [act_id, trans_id, json.dumps(t, default=str), metadata])
             self.conn.commit()
 
     def get_transactions(self, from_date=None, to_date=None, only_new=True):
@@ -176,7 +177,7 @@ class SQLiteStorage():
                 # set empty objects ({}) to None to account for assumptions that None means not processed
                 t['plaid2text'] = None
 
-            t['date'] = date_parser.parse( t['date'] )        
+            t['date'] = date_parser.parse( t['date'] )
 
             ret.append(t)
 

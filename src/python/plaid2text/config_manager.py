@@ -5,6 +5,7 @@ import configparser
 import os
 import sys
 from pathlib import Path
+import webbrowser
 
 from plaid2text.api import new_plaid_api_client
 from plaid2text.interact import prompt, NullValidator, YesNoValidator
@@ -260,6 +261,7 @@ def create_account(account):
 
         with run_link_http_server(serve_directory = Path(FILE_DEFAULTS.auth_file).parent.absolute()):
             print("\n\nPlease open " + FILE_DEFAULTS.auth_file + " to authenticate your account with Plaid")
+            webbrowser.open(FILE_DEFAULTS.auth_file, new=0, autoraise=True)
             public_token = prompt('Enter your public_token from the auth page: ', validator=NullValidator())
         # plaid['public_token'] = public_token
 

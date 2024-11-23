@@ -70,8 +70,7 @@ FILE_DEFAULTS = dotdict({
     'journal_file': os.path.join(DEFAULT_CONFIG_DIR, 'journal'),
     'mapping_file': os.path.join(DEFAULT_CONFIG_DIR, 'mapping'),
     'headers_file': os.path.join(DEFAULT_CONFIG_DIR, 'headers'),
-    'template_file': os.path.join(DEFAULT_CONFIG_DIR, 'template'),
-    'auth_file': os.path.join(DEFAULT_CONFIG_DIR, 'auth.html')})
+    'template_file': os.path.join(DEFAULT_CONFIG_DIR, 'template')})
 
 DEFAULT_LEDGER_TEMPLATE = """\
 {transaction_date} {cleared_character} {payee} {tags}
@@ -257,11 +256,9 @@ def create_account(account):
         response = client.link_token_create(link_token_create_request)
         link_token = response['link_token']
 
-        generate_auth_page(link_token)
-
-        with run_link_http_server(serve_directory = Path(FILE_DEFAULTS.auth_file).parent.absolute()):
-            print("\n\nPlease open " + FILE_DEFAULTS.auth_file + " to authenticate your account with Plaid")
-            webbrowser.open(FILE_DEFAULTS.auth_file, new=0, autoraise=True)
+        with run_link_http_server(link_token) as url:
+            print("\n\nPlease open " + url + " to authenticate your account with Plaid")
+            webbrowser.open(url, new=0, autoraise=True)
             public_token = prompt('Enter your public_token from the auth page: ', validator=NullValidator())
         # plaid['public_token'] = public_token
 
@@ -294,50 +291,6 @@ def create_account(account):
         with open(FILE_DEFAULTS.config_file, mode='a') as f:
             config.write(f)
     return True
-
-def generate_auth_page(link_token):
-    page = """
-        <html>
-            <body>
-                <button id='linkButton'>Open Link - Institution Select</button>
-                <p id="results"></p>
-                <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
-                <script>
-                    var linkHandler = Plaid.create({
-                        token: '""" + link_token + """',
-                        onLoad: function() {
-                            // The Link module finished loading.
-                        },
-                        onSuccess: function(public_token, metadata) {
-                            // Send the public_token to your app server here.
-                            // The metadata object contains info about the institution the
-                            // user selected and the account ID, if selectAccount is enabled.
-                            console.log('public_token: '+public_token+', metadata: '+JSON.stringify(metadata));
-                            document.getElementById("results").innerHTML = "public_token: " + public_token + "<br>metadata: " + JSON.stringify(metadata);
-                        },
-                        onExit: function(err, metadata) {
-                            // The user exited the Link flow.
-                            if (err != null) {
-                                // The user encountered a Plaid API error prior to exiting.
-                            }
-                            // metadata contains information about the institution
-                            // that the user selected and the most recent API request IDs.
-                            // Storing this information can be helpful for support.
-                        }
-                    });
-
-                    // Trigger the standard institution select view
-                    document.getElementById('linkButton').onclick = function() {
-                        linkHandler.open();
-                    };
-                </script>
-            </body>
-        </html>
-    """
-
-    f = open(FILE_DEFAULTS.auth_file, mode='w')
-    f.write(page)
-    f.close()
 
 
 if __name__ == '__main__':

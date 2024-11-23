@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "plaid2text"
+version = "0.1.2"
+description = "Plaid API to ledger/beancount download/conversion"
+authors = ["Sebastian Messmer <mail@smessmer.de>", "Micah Duke <MaDhAt2r@dukefoo.com>"]
+
+[tool.poetry.scripts]
+plaid2text = "plaid2text.plaid2text:main"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+# used for working with MongoDB
+pymongo = "^3.10.1"
+        
+# used in console prompts/autocompletion
+prompt-toolkit = "^3.0.5"
+        
+# the heart of the program
+plaid-python = "^28.0.0"
+beancount = "^2.2.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

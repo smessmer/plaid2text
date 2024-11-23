@@ -294,42 +294,43 @@ def create_account(account):
     return True
 
 def generate_auth_page(link_token):
-    page = """<html>
-    <body>
-    <button id='linkButton'>Open Link - Institution Select</button>
-    <p id="results"></p>
-    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
-    <script>
-    var linkHandler = Plaid.create({
-    token: '""" + link_token + """',
-    onLoad: function() {
-    // The Link module finished loading.
-    },
-    onSuccess: function(public_token, metadata) {
-    // Send the public_token to your app server here.
-    // The metadata object contains info about the institution the
-    // user selected and the account ID, if selectAccount is enabled.
-    console.log('public_token: '+public_token+', metadata: '+JSON.stringify(metadata));
-    document.getElementById("results").innerHTML = "public_token: " + public_token + "<br>metadata: " + metadata;
-    },
-    onExit: function(err, metadata) {
-    // The user exited the Link flow.
-    if (err != null) {
-    // The user encountered a Plaid API error prior to exiting.
-    }
-    // metadata contains information about the institution
-    // that the user selected and the most recent API request IDs.
-    // Storing this information can be helpful for support.
-    }
-    });
+    page = """
+        <html>
+            <body>
+                <button id='linkButton'>Open Link - Institution Select</button>
+                <p id="results"></p>
+                <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+                <script>
+                    var linkHandler = Plaid.create({
+                        token: '""" + link_token + """',
+                        onLoad: function() {
+                            // The Link module finished loading.
+                        },
+                        onSuccess: function(public_token, metadata) {
+                            // Send the public_token to your app server here.
+                            // The metadata object contains info about the institution the
+                            // user selected and the account ID, if selectAccount is enabled.
+                            console.log('public_token: '+public_token+', metadata: '+JSON.stringify(metadata));
+                            document.getElementById("results").innerHTML = "public_token: " + public_token + "<br>metadata: " + JSON.stringify(metadata);
+                        },
+                        onExit: function(err, metadata) {
+                            // The user exited the Link flow.
+                            if (err != null) {
+                                // The user encountered a Plaid API error prior to exiting.
+                            }
+                            // metadata contains information about the institution
+                            // that the user selected and the most recent API request IDs.
+                            // Storing this information can be helpful for support.
+                        }
+                    });
 
-    // Trigger the standard institution select view
-    document.getElementById('linkButton').onclick = function() {
-    linkHandler.open();
-    };
-    </script>
-    </body>
-    </html>
+                    // Trigger the standard institution select view
+                    document.getElementById('linkButton').onclick = function() {
+                        linkHandler.open();
+                    };
+                </script>
+            </body>
+        </html>
     """
 
     f = open(FILE_DEFAULTS.auth_file, mode='w')
